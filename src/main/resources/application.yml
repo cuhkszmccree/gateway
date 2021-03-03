@@ -1,0 +1,36 @@
+server:
+  port: 8080 # 服务提供方
+
+# 指定当前eureka客户端的注册地址,
+eureka:
+  client:
+    service-url:
+      defaultZone: http://192.168.0.99:8888/eureka
+  instance:
+    hostname: 192.168.0.99
+
+spring:
+  application:
+    name: eureka-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: eureka-sender
+          uri: lb://eureka-sender
+          predicates:
+            - Path=/sender/**
+          filters:
+            - StripPrefix=1
+        - id: mysql_data_service
+          uri: lb://mysql_data_service
+          predicates:
+            - Path=/mysql_service/**
+          filters:
+            - StripPrefix=1
+        - id: redis_data_service
+          uri: lb://redis_data_service
+          predicates:
+            - Path=/redis_service/**
+          filters:
+            - StripPrefix=1
+
