@@ -1,15 +1,22 @@
 server:
-  port: 8050 # 服务提供方
+  port: 8050
 
-# 指定当前eureka客户端的注册地址,
+#eureka:
+#  client:
+#    service-url:
+#      defaultZone: http://192.168.0.99:8888/eureka
+#  instance:
+#    prefer-ip-address: true
+#    ip-address: 192.168.0.99
+#    instance-id: ${eureka.instance.ip-address}:${server.port}
+
+
 eureka:
   client:
     service-url:
-      defaultZone: http://192.168.0.99:8888/eureka
+      defaultZone: http://127.0.0.1:8888/eureka
   instance:
-    prefer-ip-address: true
-    ip-address: 192.168.0.99
-    instance-id: ${eureka.instance.ip-address}:${server.port}
+    hostname: localhost
 
 spring:
   application:
@@ -30,9 +37,52 @@ spring:
           filters:
             - StripPrefix=1
         - id: redis_data_service
-          uri: lb://redis_data_service
+          uri: lb://redis-data-service
           predicates:
             - Path=/redis_service/**
           filters:
             - StripPrefix=1
+        - id: scada-auth
+          uri: lb://scada-auth
+          predicates:
+            - Path=/auth/**
+          filters:
+            - StripPrefix=1
+        - id: oauth2-api-route
+          uri: lb://micro-oauth2-api
+          predicates:
+            - Path=/api/**
+          filters:
+            - StripPrefix=1
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: 'http://localhost:9401/rsa/publicKey'
+  datasource:
+    name: test
+    url: jdbc:mysql://127.0.0.1:3306/security?serverTimezone=Asia/Shanghai
+    username: root
+    password: root
+  redis:
+    database: 0
+    port: 6379
+    host: localhost
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    health:
+      show-details: always
+
+
+secure:
+  ignore:
+    urls: #配置白名单路径
+      - "/actuator/**"
+      - "/auth/oauth/token"
+      - "/auth/log_in"
+      - "/auth/signup"
